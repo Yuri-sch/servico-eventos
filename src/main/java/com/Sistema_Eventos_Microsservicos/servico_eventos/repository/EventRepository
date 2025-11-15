@@ -1,0 +1,19 @@
+package com.Sistema_Eventos_Microsservicos.servico_eventos.repository;
+
+import com.Sistema_Eventos_Microsservicos.servico_eventos.model.Event;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface EventRepository extends JpaRepository<Event, String> {
+
+    // Métodos que respeitam o Soft-Delete
+    @Query("SELECT e FROM Event e WHERE e.id = ?1 AND e.deletedAt IS NULL")
+    Optional<Event> findActiveById(String id);
+
+    @Query("SELECT e FROM Event e WHERE e.deletedAt IS NULL")
+    List<Event> findAllActive();
+}

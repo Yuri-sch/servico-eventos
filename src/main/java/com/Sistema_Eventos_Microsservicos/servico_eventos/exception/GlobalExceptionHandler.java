@@ -1,0 +1,63 @@
+package com.Sistema_Eventos_Microsservicos.servico_eventos.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import java.time.Instant;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    /**
+     * Handler para Erros 404 (Não Encontrado)
+     */
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleEventNotFound(EventNotFoundException ex) {
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                Instant.now()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Handler para Erros 400 (Validação de DTO)
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+        
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> "'" + error.getField() + "': " + error.getDefaultMessage())
+                .reduce((msg1, msg2) -> msg1 + "; " + msg2)
+                .orElse("Validation Error");
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                errorMessage,
+                Instant.now()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handler para Erros 500 (Genérico / "Pega-Tudo")
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
+        
+        // Logar o erro real no console para debug
+        System.err.println("INTERNAL_SERVER_ERROR: " + ex.getMessage());
+        ex.printStackTrace(); // Mostra a pilha de erro completa
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected internal error occurred.", // Mensagem genérica para o usuário
+                Instant.now()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}

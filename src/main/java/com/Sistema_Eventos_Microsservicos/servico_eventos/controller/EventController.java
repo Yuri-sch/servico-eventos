@@ -3,6 +3,7 @@ package com.Sistema_Eventos_Microsservicos.servico_eventos.controller;
 import com.Sistema_Eventos_Microsservicos.servico_eventos.dto.EventCreateDTO;
 import com.Sistema_Eventos_Microsservicos.servico_eventos.dto.EventResponseDTO;
 import com.Sistema_Eventos_Microsservicos.servico_eventos.service.EventService;
+import com.Sistema_Eventos_Microsservicos.servico_eventos.model.Event;
 import com.Sistema_Eventos_Microsservicos.servico_eventos.exception.EventNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Controlador REST para o gerenciamento de Eventos.
+ * Controlador REST para as operações de CRUD (Criar, Ler, Atualizar, Deletar) da entidade {@link Event}.
  * <p>
- * Expõe os endpoints para criar e ler eventos. A segurança é tratada
- * pelo API Gateway. É necessário estar logado para acessar os recursos.
+ * Todos os endpoints deste controlador são protegidos e esperam que o API Gateway
+ * injete os headers de segurança (`X-User-Id`, `X-User-Roles`) após a
+ * validação do token JWT.
  */
 @RestController
 @RequestMapping("/events") // Endpoint em inglês

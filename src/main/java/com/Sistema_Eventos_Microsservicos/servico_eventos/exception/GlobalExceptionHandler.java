@@ -1,7 +1,9 @@
 package com.Sistema_Eventos_Microsservicos.servico_eventos.exception;
 
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -10,6 +12,39 @@ import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Handler para Erros 400 (Validação de DTO)
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> "'" + error.getField() + "': " + error.getDefaultMessage())
+                .reduce((msg1, msg2) -> msg1 + "; " + msg2)
+                .orElse("Validation Error");
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                errorMessage,
+                Instant.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * Handler para erro de AccessDenied (403)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        String errorMessage = ex.getMessage();
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.FORBIDDEN,
+                errorMessage,
+                Instant.now()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
 
     /**
      * Handler para Erros 404 (Não Encontrado)
@@ -21,26 +56,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 Instant.now()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
-    /**
-     * Handler para Erros 400 (Validação de DTO)
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
-        
-        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> "'" + error.getField() + "': " + error.getDefaultMessage())
-                .reduce((msg1, msg2) -> msg1 + "; " + msg2)
-                .orElse("Validation Error");
-
-        ApiErrorResponse errorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                errorMessage,
-                Instant.now()
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
     /**
@@ -58,6 +74,6 @@ public class GlobalExceptionHandler {
                 "An unexpected internal error occurred.", // Mensagem genérica para o usuário
                 Instant.now()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }
